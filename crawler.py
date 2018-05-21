@@ -67,7 +67,8 @@ def get_text_from_gutenberg(start, end):
                         et.write(log)
                 continue
 
-            with open(ROOT + '\\data\\gutenberg\\' + str(index), 'w', encoding='utf-8') as f:
+            filename = '%s\\data\\gutenberg\\%s.book' % (ROOT, str(index))
+            with open(filename, 'w', encoding='utf-8') as f:
                 f.write(text)
                 print('BOOK %d SAVED' % (index))
 
@@ -76,7 +77,7 @@ def get_text_from_gutenberg(start, end):
 
 if __name__ == '__main__':
 
-    with open('exception_text_list', 'w', encoding='utf-8'):
+    with open('bookbase.excpt', 'w', encoding='utf-8'):
         pass
 
     for i in range(20):
