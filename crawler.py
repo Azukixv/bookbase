@@ -57,12 +57,12 @@ def get_text_from_gutenberg(start, end):
                     text = text.content.decode('utf-8-sig', 'ignore')
                     text = tokenizing(text)
                 except Exception as e:
-                    with open('exception_text_list', 'a', encoding='utf-8') as et:
+                    with open('bookbase.excpt', 'a', encoding='utf-8') as et:
                         log = '[Gutenberg] %s:\t%s\n' % (str(index), str(e))
                         et.write(log)
                     continue
             else:
-                with open('exception_text_list', 'a', encoding='utf-8') as et:
+                with open('bookbase.excpt', 'a', encoding='utf-8') as et:
                         log = '[Gutenberg]:\tdid not get text url from http://www.gutenberg.org/ebooks/%d\n' % index
                         et.write(log)
                 continue
@@ -77,6 +77,7 @@ def get_text_from_gutenberg(start, end):
 
 if __name__ == '__main__':
 
+    os.makedirs(ROOT + '\\data\\gutenberg')
     with open('bookbase.excpt', 'w', encoding='utf-8'):
         pass
 

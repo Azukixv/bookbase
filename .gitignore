@@ -1,6 +1,6 @@
 # Manual
-.excpt
-.book
+*.excpt
+*.book
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
