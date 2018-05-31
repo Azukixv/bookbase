@@ -6,6 +6,7 @@ import requests
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
+OS = os.name
 
 class GutenbergParser(HTMLParser):
     def __init__(self):
@@ -67,7 +68,10 @@ def get_text_from_gutenberg(start, end):
                         et.write(log)
                 continue
 
-            filename = '%s\\data\\gutenberg\\%s.book' % (ROOT, str(index))
+            if OS == 'nt':
+            	filename = '%s\\data\\gutenberg\\%s.book' % (ROOT, str(index))
+            if OS == 'posix':
+            	filename = '%s/data/gutenberg/%s.book' % (ROOT, str(index))
             with open(filename, 'w', encoding='utf-8') as f:
                 f.write(text)
                 print('BOOK %d SAVED' % (index))
@@ -77,10 +81,13 @@ def get_text_from_gutenberg(start, end):
 
 if __name__ == '__main__':
 
-    os.makedirs(ROOT + '\\data\\gutenberg')
-    with open('bookbase.excpt', 'w', encoding='utf-8'):
-        pass
+    if OS == 'nt':
+    	os.makedirs(ROOT + '\\data\\gutenberg')
+    if OS == 'posix':
+    	os.makedirs(ROOT + '/data/gutenberg')
+    # with open('bookbase.excpt', 'w', encoding='utf-8'):
+    #     pass
 
-    for i in range(20):
-        t = threading.Thread(target=get_text_from_gutenberg, args=(200*i+1, 200*i+401, ))
-        t.start()
+    # for i in range(20):
+    #     t = threading.Thread(target=get_text_from_gutenberg, args=(200*i+1, 200*i+201, ))
+    #     t.start()
