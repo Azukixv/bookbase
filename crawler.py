@@ -1,4 +1,3 @@
-# coding=utf-8
 import os
 import threading
 import time
@@ -6,7 +5,7 @@ import requests
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-OS = os.name
+GUTENBURG_PATH = os.path.join(ROOT, 'data', 'gutenburg')
 
 class GutenbergParser(HTMLParser):
     def __init__(self):
@@ -42,16 +41,19 @@ def get_text_from_gutenberg(start, end):
     for index in range(start, end):
         print('BOOK INDEX:\t%d' % index)
         book_url = 'http://www.gutenberg.org/ebooks/' + str(index)
-        # print('BOOK URL:\t%s' % book_url)
         response = keep_get(book_url)
         if response.status_code != 200:
             continue
         else:
-            # print('200 OK')
             html = response.content.decode('utf-8')
             parser.feed(html)
-            if parser.text_url != '':
-                if parser.text_url[0:4] != 'http':
+            if parser.text_url == '':
+                with open('bookbase.excpt', 'a', encoding='utf-8') as et:
+                        log = '[Gutenberg]:\tdid not get text url from http://www.gutenberg.org/ebooks/%d\n' % index
+                        et.write(log)
+                continue
+            else:
+                if parser.text_url[:4] != 'http':
                    parser.text_url = 'http:' + parser.text_url
                 try:
                     text = keep_get(parser.text_url)
@@ -62,16 +64,8 @@ def get_text_from_gutenberg(start, end):
                         log = '[Gutenberg] %s:\t%s\n' % (str(index), str(e))
                         et.write(log)
                     continue
-            else:
-                with open('bookbase.excpt', 'a', encoding='utf-8') as et:
-                        log = '[Gutenberg]:\tdid not get text url from http://www.gutenberg.org/ebooks/%d\n' % index
-                        et.write(log)
-                continue
 
-            if OS == 'nt':
-            	filename = '%s\\data\\gutenberg\\%s.book' % (ROOT, str(index))
-            if OS == 'posix':
-            	filename = '%s/data/gutenberg/%s.book' % (ROOT, str(index))
+            filename = '%s%s%d.book' % (GUTENBURG_PATH, os.sep, index)
             with open(filename, 'w', encoding='utf-8') as f:
                 f.write(text)
                 print('BOOK %d SAVED' % (index))
@@ -81,13 +75,11 @@ def get_text_from_gutenberg(start, end):
 
 if __name__ == '__main__':
 
-    if OS == 'nt':
-    	os.makedirs(ROOT + '\\data\\gutenberg')
-    if OS == 'posix':
-    	os.makedirs(ROOT + '/data/gutenberg')
+    if not os.path.exists(GUTENBURG_PATH):
+        os.makedirs(GUTENBURG_PATH)
     with open('bookbase.excpt', 'w', encoding='utf-8'):
         pass
 
     for i in range(20):
-        t = threading.Thread(target=get_text_from_gutenberg, args=(200*i+1, 200*i+201, ))
+        t = threading.Thread(target=get_text_from_gutenberg, args=(i, i+1, ))
         t.start()
