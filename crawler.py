@@ -7,6 +7,7 @@ from html.parser import HTMLParser
 ROOT = os.path.dirname(os.path.abspath(__file__))
 GUTENBURG_PATH = os.path.join(ROOT, 'data', 'gutenburg')
 
+
 class GutenbergParser(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)
@@ -14,8 +15,10 @@ class GutenbergParser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
-            if len(attrs) >= 2 and (attrs[1] == ('type', 'text/plain') or attrs[1] == ('type', 'text/plain; charset=utf-8')):
-                self.text_url = attrs[0][1]
+            if len(attrs) >= 2:
+                if attrs[1] == ('type', 'text/plain') or attrs[1] == ('type', 'text/plain; charset=utf-8'):
+                    self.text_url = attrs[0][1]
+
 
 def tokenizing(text):
     text = text.lower()
@@ -24,16 +27,18 @@ def tokenizing(text):
     text = text.replace('  ', ' ')
     return text
 
+
 def keep_get(url):
     keep_alive = True
     while keep_alive:
         try:
             result = requests.get(url)
             keep_alive = False
-        except Exception as e:
+        except Exception:
             print('LINK REESTABLISHMENT')
             time.sleep(1)
     return result
+
 
 def get_text_from_gutenberg(start, end):
     parser = GutenbergParser()
@@ -49,12 +54,12 @@ def get_text_from_gutenberg(start, end):
             parser.feed(html)
             if parser.text_url == '':
                 with open('bookbase.excpt', 'a', encoding='utf-8') as et:
-                        log = '[Gutenberg]:\tdid not get text url from http://www.gutenberg.org/ebooks/%d\n' % index
-                        et.write(log)
+                    log = '[Gutenberg]:\tdid not get text url from http://www.gutenberg.org/ebooks/%d\n' % index
+                    et.write(log)
                 continue
             else:
                 if parser.text_url[:4] != 'http':
-                   parser.text_url = 'http:' + parser.text_url
+                    parser.text_url = 'http:' + parser.text_url
                 try:
                     text = keep_get(parser.text_url)
                     text = text.content.decode('utf-8-sig', 'ignore')
@@ -68,7 +73,7 @@ def get_text_from_gutenberg(start, end):
             filename = '%s%s%d.book' % (GUTENBURG_PATH, os.sep, index)
             with open(filename, 'w', encoding='utf-8') as f:
                 f.write(text)
-                print('BOOK %d SAVED' % (index))
+                print('BOOK %d SAVED' % index)
 
         time.sleep(5)
 
@@ -81,5 +86,5 @@ if __name__ == '__main__':
         pass
 
     for i in range(20):
-        t = threading.Thread(target=get_text_from_gutenberg, args=(i, i+1, ))
+        t = threading.Thread(target=get_text_from_gutenberg, args=(i, i + 1,))
         t.start()
