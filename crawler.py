@@ -85,9 +85,9 @@ if __name__ == '__main__':
     	os.makedirs(ROOT + '\\data\\gutenberg')
     if OS == 'posix':
     	os.makedirs(ROOT + '/data/gutenberg')
-    # with open('bookbase.excpt', 'w', encoding='utf-8'):
-    #     pass
+    with open('bookbase.excpt', 'w', encoding='utf-8'):
+        pass
 
-    # for i in range(20):
-    #     t = threading.Thread(target=get_text_from_gutenberg, args=(200*i+1, 200*i+201, ))
-    #     t.start()
+    for i in range(20):
+        t = threading.Thread(target=get_text_from_gutenberg, args=(200*i+1, 200*i+201, ))
+        t.start()
