@@ -13,7 +13,8 @@ If you have installed the conda, use
 ## Preparation
 In order to search the book, you need to first run the `build.py`, which will crawl books info from the Internet and build index for those books.
 
-Then use
+## Start Searching
+Use
 
 `python3 manage.py runserver`
 
