@@ -8,6 +8,12 @@
 	<form action="/search" method="post">
 		{% csrf_token %}
 		<input type="text" name="q" placeholder="type to search" value={{ q }}>
+		<span>Searched by</span>
+		<select name="field">
+			<option value="title">title</option>
+			<option value="content">content</option>
+			<option value="author">author</option>
+		</select>
 		<input type="submit" value="Submit">
 	</form>
 	<ul>

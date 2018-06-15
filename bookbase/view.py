@@ -17,7 +17,7 @@ def search(request):
     index = open_dir(INDEX_GUTENBERG_DIR)
     context = {}
     if request.POST:
-        query_parser = QueryParser('content', index.schema)
+        query_parser = QueryParser(request.POST['field'], index.schema)
         query = query_parser.parse(request.POST['q'])
         with index.searcher() as s:
             result = list(s.search(query))

@@ -85,7 +85,7 @@ if __name__ == '__main__':
         os.makedirs(INDEX_GUTENBERG_DIR)
         create_in(INDEX_GUTENBERG_DIR, schema)
 
-    for index in range(1, 11):
+    for index in range(1, 21):
         parser = gutenberg_doc_crawler(index)
         gutenberg_index_build(parser)
         sleep(5)
