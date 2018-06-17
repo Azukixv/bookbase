@@ -2,23 +2,33 @@
 <html>
 <head>
 <meta charset="utf-8">
+	<link href="/static/css/bookstyle.css" rel="stylesheet">
 	<title>bookbase(dev)</title>
 </head>
 <body>
-	<form action="/search" method="post">
+	<form class="search-zone" action="/search" method="post">
 		{% csrf_token %}
-		<input type="text" name="q" placeholder="type to search" value={{ q }}>
-		<span>Searched by</span>
-		<select name="field">
-			<option value="title">title</option>
-			<option value="content">content</option>
-			<option value="author">author</option>
-		</select>
-		<input type="submit" value="Submit">
+		<div class="search-bar">
+			<input type="text" name="q" placeholder="type to search">
+			<span>Searched by</span>
+			<select name="field">
+				<option value="title">title</option>
+				<option value="content">content</option>
+				<option value="author">author</option>
+			</select>
+			<input type="submit" value="Submit">
+		</div>
 	</form>
 	<ul>
 		{% for book in book_list %}
-			<li>{{ book.title }}</li>
+			<li class="book-info">
+				<h3 class="book-title"><a href={{ book.url }}>{{ book.title }}</a></h3>
+				<span class="book-author">by {{ book.author }}</span>
+				<span class="book-date">in {{ book.date }}</span>
+				<ul>
+					<li class="tag">{{ book.tag }}</li>
+				</ul>
+			</li>
 		{% endfor %}
 	</ul>
 </body>

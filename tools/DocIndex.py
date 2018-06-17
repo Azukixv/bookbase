@@ -25,3 +25,7 @@ class GutenbergIndexSchema(SchemaClass):
         spelling=True,
         vector=True
     )
+    url = STORED()
+    tag = KEYWORD(
+        stored=True
+    )

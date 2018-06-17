@@ -2,7 +2,9 @@ import os
 import sys
 sys.path.append('.')
 sys.path.append('..')
+import datetime
 from django.shortcuts import render
+from whoosh import scoring
 from whoosh.index import *
 from whoosh.qparser import *
 from whoosh.query import *
@@ -19,10 +21,14 @@ def search(request):
     if request.POST:
         query_parser = QueryParser(request.POST['field'], index.schema)
         query = query_parser.parse(request.POST['q'])
-        with index.searcher() as s:
-            result = list(s.search(query))
-            for i in range(len(result)):
-                result[i] = dict(result[i])
-            context['book_list'] = result
-            context['q'] = request.POST['q']
+        print(request.POST['q'])
+        with index.searcher(weighting=scoring.BM25F()) as s:
+            book_list = list(s.search_page(query, 1, pagelen=15))
+            print(book_list)
+            for i in range(len(book_list)):
+                book_list[i] = dict(book_list[i])
+            # book_list = sorted(book_list, key=lambda book:book['title'])
+            for book in book_list:
+                book['date'] = book['date'].strftime('%b %d, %Y')
+            context['book_list'] = book_list
     return render(request, 'index.html', context)

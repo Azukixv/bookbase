@@ -1,6 +1,7 @@
 from html.parser import HTMLParser
 import re
 import datetime
+import requests
 
 
 class GutenbergParser(HTMLParser):
@@ -8,21 +9,26 @@ class GutenbergParser(HTMLParser):
         HTMLParser.__init__(self)
         self.title          = ''
         self.tba            = ''    # $(Title) by $(Author)
-        self.author         = ''
-        self.date           = ''
+        self.author         = 'Anonymous'
+        self.date           = 'Unknown'
         self.content_url    = ''
         self.content        = ''
+        self.url            = ''
         self.language       = ''
+        self.tag            = ''
 
         self.meet_title     = False
         self.meet_tba       = False
         self.meet_date      = False
+        self.meet_tag       = False
 
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
             if len(attrs) >= 2:
                 if attrs[1] == ('type', 'text/plain') or attrs[1] == ('type', 'text/plain; charset=utf-8'):
                     self.content_url = attrs[0][1]
+                if attrs[0] == ('class', 'block') and attrs[1][1][:15] == '/ebooks/subject':
+                    self.meet_tag = True
 
         if tag == 'td':
             if len(attrs) >= 1:
@@ -48,7 +54,7 @@ class GutenbergParser(HTMLParser):
 
             pattern_tba = re.compile('%s by (.*)' % self.title)
             match = pattern_tba.match(self.tba)
-            if match:
+            if match and match.group(1) != '':
                 self.author = match.group(1)
 
         if self.meet_tba:
@@ -59,6 +65,12 @@ class GutenbergParser(HTMLParser):
             self.date = data
             self.date_transfer()
             self.meet_date = False
+
+        if self.meet_tag:
+            self.tag += data
+            self.tag = re.sub(r'[^A-Za-z]+', ' ', self.tag)
+            self.tag = re.sub(r' and ', ' ', self.tag).split()[0]
+            self.meet_tag = False
 
     def date_transfer(self):
         date_list = re.split(r'\W+|[年月日]', self.date)
