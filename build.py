@@ -185,47 +185,97 @@ def duanwenxue_index_build(writer, parser):
     COUNTER[1][1] += 1
 
 
-def build(thread_num, doc_num):
+# def build(thread_num, doc_num):
+#     if os.path.exists(DATA_GUTENBERG_DIR):
+#         shutil.rmtree(DATA_GUTENBERG_DIR)
+#     if os.path.exists(INDEX_GUTENBERG_DIR):
+#         shutil.rmtree(INDEX_GUTENBERG_DIR)
+#     if os.path.exists(DATA_DUANWENXUE_DIR):
+#         shutil.rmtree(DATA_DUANWENXUE_DIR)
+#     if os.path.exists(INDEX_DUANWENXUE_DIR):
+#         shutil.rmtree(INDEX_DUANWENXUE_DIR)
+#     if os.path.exists(os.path.join(ROOT, 'bookbase.excpt')):
+#         os.remove(os.path.join(ROOT, 'bookbase.excpt'))
+#
+#     os.makedirs(DATA_GUTENBERG_DIR)
+#     os.makedirs(INDEX_GUTENBERG_DIR)
+#     os.makedirs(DATA_DUANWENXUE_DIR)
+#     os.makedirs(INDEX_DUANWENXUE_DIR)
+#     schema_g = GutenbergIndexSchema()
+#     schema_d = DuanwenxueIndexSchema()
+#     create_in(INDEX_GUTENBERG_DIR, schema_g)
+#     create_in(INDEX_DUANWENXUE_DIR, schema_d)
+#
+#     writer_g = open_dir(INDEX_GUTENBERG_DIR).writer()
+#     writer_d = open_dir(INDEX_DUANWENXUE_DIR).writer()
+#     for num in range(thread_num):
+#         pt_g = threading.Thread(target=gutenberg_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
+#         pt_d = threading.Thread(target=duanwenxue_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
+#         pt_g.start()
+#         pt_d.start()
+#     time.sleep(5)
+#     while not GUTENBERG_PARSER_QUEUE.empty():
+#         it_g = threading.Thread(target=gutenberg_index_build, args=(writer_g, GUTENBERG_PARSER_QUEUE.get(),))
+#         it_d = threading.Thread(target=duanwenxue_index_build, args=(writer_d, DUANWENXUE_PARSER_QUEUE.get(),))
+#         it_g.start()
+#         it_d.start()
+#         it_g.join()
+#         it_d.join()
+#     writer_g.commit()
+#     writer_d.commit()
+#     print(COUNTER)
+
+def build_gutenberg(thread_num, doc_num):
     if os.path.exists(DATA_GUTENBERG_DIR):
         shutil.rmtree(DATA_GUTENBERG_DIR)
     if os.path.exists(INDEX_GUTENBERG_DIR):
         shutil.rmtree(INDEX_GUTENBERG_DIR)
-    if os.path.exists(DATA_DUANWENXUE_DIR):
-        shutil.rmtree(DATA_DUANWENXUE_DIR)
-    if os.path.exists(INDEX_DUANWENXUE_DIR):
-        shutil.rmtree(INDEX_DUANWENXUE_DIR)
     if os.path.exists(os.path.join(ROOT, 'bookbase.excpt')):
         os.remove(os.path.join(ROOT, 'bookbase.excpt'))
 
     os.makedirs(DATA_GUTENBERG_DIR)
     os.makedirs(INDEX_GUTENBERG_DIR)
-    os.makedirs(DATA_DUANWENXUE_DIR)
-    os.makedirs(INDEX_DUANWENXUE_DIR)
-    schema_g = GutenbergIndexSchema()
-    schema_d = DuanwenxueIndexSchema()
-    create_in(INDEX_GUTENBERG_DIR, schema_g)
-    create_in(INDEX_DUANWENXUE_DIR, schema_d)
+    schema = GutenbergIndexSchema()
+    create_in(INDEX_GUTENBERG_DIR, schema)
 
-    writer_g = open_dir(INDEX_GUTENBERG_DIR).writer()
-    writer_d = open_dir(INDEX_DUANWENXUE_DIR).writer()
+    writer = open_dir(INDEX_GUTENBERG_DIR).writer()
     for num in range(thread_num):
-        pt_g = threading.Thread(target=gutenberg_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
-        pt_d = threading.Thread(target=duanwenxue_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
-        pt_g.start()
-        pt_d.start()
+        pt = threading.Thread(target=gutenberg_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
+        pt.start()
     time.sleep(5)
     while not GUTENBERG_PARSER_QUEUE.empty():
-        it_g = threading.Thread(target=gutenberg_index_build, args=(writer_g, GUTENBERG_PARSER_QUEUE.get(),))
-        it_d = threading.Thread(target=duanwenxue_index_build, args=(writer_d, DUANWENXUE_PARSER_QUEUE.get(),))
-        it_g.start()
-        it_d.start()
-        it_g.join()
-        it_d.join()
-    writer_g.commit()
-    writer_d.commit()
-    print(COUNTER)
+        it = threading.Thread(target=gutenberg_index_build, args=(writer, GUTENBERG_PARSER_QUEUE.get(),))
+        it.start()
+        it.join()
+    writer.commit()
+
+
+def build_duanwenxue(thread_num, doc_num):
+    if os.path.exists(DATA_DUANWENXUE_DIR):
+        shutil.rmtree(DATA_DUANWENXUE_DIR)
+    if os.path.exists(INDEX_DUANWENXUE_DIR):
+        shutil.rmtree(INDEX_DUANWENXUE_DIR)
+
+    os.makedirs(DATA_DUANWENXUE_DIR)
+    os.makedirs(INDEX_DUANWENXUE_DIR)
+    schema = DuanwenxueIndexSchema()
+    create_in(INDEX_DUANWENXUE_DIR, schema)
+
+    writer = open_dir(INDEX_DUANWENXUE_DIR).writer()
+    for num in range(thread_num):
+        pt = threading.Thread(target=duanwenxue_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
+        pt.start()
+    time.sleep(5)
+    while not DUANWENXUE_PARSER_QUEUE.empty():
+        it = threading.Thread(target=duanwenxue_index_build, args=(writer, DUANWENXUE_PARSER_QUEUE.get(),))
+        it.start()
+        it.join()
+    writer.commit()
 
 
 if __name__ == '__main__':
-    build(5, 3)
+    # build(5, 3)
     # douban_review_crawler('Alice in Wonderland')
+    build_gutenberg(50, 450)
+    build_duanwenxue(50, 450)
+    print(COUNTER)

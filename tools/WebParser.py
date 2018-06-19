@@ -113,7 +113,7 @@ class DoubanParserPre(HTMLParser):
         if tag == 'a':
             if str(attrs[0]).find('&pos=0') != -1:
                 self.link = attrs[0][1]
-                #print(self.link)
+                # print(self.link)
             if str(attrs[0]).find('&pos=') != -1 and self.link_flag_count==0:
                 self.link_flag = True
                 self.link_candi = attrs[0][1]
@@ -122,11 +122,11 @@ class DoubanParserPre(HTMLParser):
         if self.link_flag == True:
             self.link_flag = False
             stdata = re.sub('[^a-zA-Z0-9]',' ',str(data))
-            #print('matching '+self.title+ ' in ' + stdata)
+            # print('matching '+self.title+ ' in ' + stdata)
             if stdata.find(self.title) in range(0,5):
                 self.link = self.link_candi
                 self.link_flag_count = 1
-                #print(self.link)
+                # print(self.link)
 
 
 class DoubanParser(HTMLParser):
