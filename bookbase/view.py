@@ -1,5 +1,9 @@
 import os
 import sys
+from typing import Dict, List, Any, Union
+
+from whoosh.searching import ResultsPage
+
 sys.path.append('.')
 sys.path.append('..')
 import datetime
@@ -12,8 +16,10 @@ from whoosh.query import *
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDEX_GUTENBERG_DIR = os.path.join(ROOT, 'index', 'gutenberg')
 
+
 def index(request):
     return render(request, 'index.html')
+
 
 def search(request):
     index = open_dir(INDEX_GUTENBERG_DIR)

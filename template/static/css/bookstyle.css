@@ -49,11 +49,12 @@ ul li {
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 2px;
-	margin-bottom: 2px;
+	margin-bottom: 10px;
 	border-style: solid;
+	border-radius: 7px;
 	border-width: 2px;
 	border-color: #EEE;
-	border-top-color: #336774
+	border-top-color: #336774;
 }
 
 .book-title {
@@ -87,4 +88,53 @@ ul li {
 	border-width: 1px;
 	border-radius: 2px;
 	border-color: #C7802D;
+}
+
+.review {
+	border-style: dashed;
+	border-width: 1px;
+	border-color: #777;
+	border-radius: 5px;
+}
+
+.review {
+	font-size: 12px;
+	width: 92%;
+	margin-top: 5px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-top: 1em;
+}
+
+.review-title {
+	font-size: 13px;
+	font-weight: bold;
+	margin-left: 1em;
+}
+
+.review-title:link {
+	text-decoration: none;
+	color: #336774;
+}
+
+.review-title:visited {
+	text-decoration: none;
+	color: #336774;
+}
+
+.review-title:hover {
+	text-decoration: underline;
+	color: #336774;
+}
+
+.review-title:active {
+	text-decoration: underline;
+	color: #336774;
+}
+
+.review-brief {
+	color: #777;
+	width: 93%;
+	margin-left: auto;
+	margin-right: auto;
 }

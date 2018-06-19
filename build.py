@@ -1,6 +1,6 @@
-from tools.DocIndex import GutenbergIndexSchema
-from tools.WebParser import GutenbergParser
-from tools.DocClean import clean_gutenberg_doc
+from tools.DocIndex import *
+from tools.WebParser import *
+from tools.DocClean import *
 from whoosh.index import *
 import os
 import shutil
@@ -88,16 +88,55 @@ def gutenberg_doc_crawler_(start, end):
 
 
 def gutenberg_index_build(writer, parser):
-    writer.add_document(
-        title=parser.title,
-        author=parser.author,
-        date=parser.date,
-        content=parser.content,
-        url=parser.url,
-        tag=parser.tag
-    )
+    reviews = douban_review_crawler(parser.title)
+    if reviews == None or reviews == []:
+        writer.add_document(
+            title=parser.title,
+            author=parser.author,
+            date=parser.date,
+            content=parser.content,
+            url=parser.url,
+            tag=parser.tag
+        )
+    else:
+        writer.add_document(
+            title=parser.title,
+            author=parser.author,
+            date=parser.date,
+            content=parser.content,
+            url=parser.url,
+            tag=parser.tag,
+            reviews=reviews
+        )
     print('%s INDEXED' % parser.title)
     COUNTER[1] += 1
+
+
+def douban_review_crawler(title):
+    parser = DoubanParser()
+    parser_pre = DoubanParserPre()
+    url = 'https://www.douban.com/search'
+    para = {'cat': 1001, 'q': title}
+    response = requests.get(url, para)
+    if response.status_code != 200:
+        return None
+    else:
+        html = response.content.decode('utf-8')
+        parser_pre.feed(html)
+        if parser_pre.link == '':
+            return None
+        else:
+            book_url = parser_pre.link
+            response = keep_get(book_url)
+            if response.status_code != 200:
+                return None
+            else:
+                html = response.content.decode('utf-8')
+                parser.feed(html)
+                # for review in parser.reviews:
+                #     for key, value in review.items():
+                #         print(key, clean_douban_review(value))
+                return parser.reviews
 
 
 def build(thread_num, doc_num):
@@ -127,4 +166,5 @@ def build(thread_num, doc_num):
 
 
 if __name__ == '__main__':
-    build(20, 3)
+    build(5, 3)
+    # douban_review_crawler('Alice in Wonderland')

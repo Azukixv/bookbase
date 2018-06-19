@@ -29,3 +29,4 @@ class GutenbergIndexSchema(SchemaClass):
     tag = KEYWORD(
         stored=True
     )
+    reviews = STORED()
