@@ -15,6 +15,7 @@ from whoosh.query import *
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 INDEX_GUTENBERG_DIR = os.path.join(ROOT, 'index', 'gutenberg')
+INDEX_DUANWENXUE_DIR = os.path.join(ROOT, 'index', 'duanwenxue')
 
 
 def index(request):
@@ -22,18 +23,23 @@ def index(request):
 
 
 def search(request):
-    index = open_dir(INDEX_GUTENBERG_DIR)
     context = {}
     if request.POST:
-        query_parser = QueryParser(request.POST['field'], index.schema)
-        query = query_parser.parse(request.POST['q'])
-        print(request.POST['q'])
+        if request.POST['lan'] == 'en':
+            index = open_dir(INDEX_GUTENBERG_DIR)
+            query_parser = QueryParser(request.POST['field'], index.schema)
+            query = query_parser.parse(request.POST['q'])
+        else:
+            index = open_dir(INDEX_DUANWENXUE_DIR)
+            query_parser = QueryParser(request.POST['field'], index.schema)
+            query = query_parser.parse(request.POST['q'])
+
         with index.searcher(weighting=scoring.BM25F()) as s:
             book_list = list(s.search_page(query, 1, pagelen=15))
-            print(book_list)
+
             for i in range(len(book_list)):
                 book_list[i] = dict(book_list[i])
-            # book_list = sorted(book_list, key=lambda book:book['title'])
+                # book_list = sorted(book_list, key=lambda book:book['title'])
             for book in book_list:
                 book['date'] = book['date'].strftime('%b %d, %Y')
             context['book_list'] = book_list

@@ -132,19 +132,19 @@ class DoubanParserPre(HTMLParser):
 class DoubanParser(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)
-        self.title              = ''
-        self.meet_title         = False
-        self.r_title            = ['', '', '']
-        self.r_url              = ['', '', '']
-        self.r_title_count      = 0
+        self.title = ''
+        self.meet_title = False
+        self.r_title = ['', '', '']
+        self.r_url = ['', '', '']
+        self.r_title_count = 0
         self.r_title_count_flag = False
-        self.r_brief            = ['', '', '']
-        self.r_b_count          = 0
-        self.r_b_count_flag     = False
-        self.r_full             = ['', '', '']
-        self.r_f_count          = 0
-        self.r_f_flag           = False
-        self.reviews            = []
+        self.r_brief = ['', '', '']
+        self.r_b_count = 0
+        self.r_b_count_flag = False
+        self.r_full = ['', '', '']
+        self.r_f_count = 0
+        self.r_f_flag = False
+        self.reviews = []
 
     def handle_starttag(self, tag, attrs):
         # get book title
@@ -204,3 +204,72 @@ class DoubanParser(HTMLParser):
 
         if self.r_b_count_flag:
             self.r_brief[self.r_b_count - 1] += data
+
+
+class DuanwenxueParser(HTMLParser):
+    def __init__(self):
+        HTMLParser.__init__(self)
+        self.title          = ''
+        self.author         = 'Anonymous'
+        self.date           = 'Unknown'
+        self.content        = ''
+        self.url            = ''
+        self.tag            = ''
+
+        self.meet_title     = False
+        self.meet_author    = False
+        self.meet_date      = False
+        self.meet_content   = False
+        self.num            = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag == 'div':
+            if len(attrs) == 1:
+                if attrs[0] == ('class', 'text'):
+                    self.meet_date = True
+
+        if tag == 'title':
+            if len(attrs) == 0:
+                self.meet_title = True
+
+        if tag == 'div':
+            if len(attrs) == 1:
+                if attrs[0] == ('class', 'face'):
+                    self.meet_author = True
+
+        if tag == 'p':
+            if len(attrs) == 0:
+                self.meet_content = True
+
+    def handle_endtag(self, tag):
+        if tag == 'p':
+            self.meet_content = False
+
+    def handle_data(self, data):
+        if self.meet_title:
+            tmp = data.split('_')
+            self.title = tmp[0]
+            self.tag = tmp[1]
+            self.meet_title = False
+
+        if self.meet_author:
+            self.num += 1
+            if self.num == 2:
+                data = re.sub(r'[\s\n\r]+', '', data)
+                if data != '':
+                    self.author = data
+                self.meet_author = False
+                self.num = 0
+
+        if self.meet_content:
+            self.content = self.content + data
+
+        if self.meet_date:
+            tmp1 = data
+            self.date = re.search(r'\d*-\d*-\d*', tmp1).group()
+            self.date_transfer()
+            self.meet_date = False
+
+    def date_transfer(self):
+        date_struct = datetime.datetime.strptime(self.date, '%Y-%m-%d')
+        self.date = date_struct

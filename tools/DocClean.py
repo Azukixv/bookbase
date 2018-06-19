@@ -14,3 +14,9 @@ def clean_douban_review(text):
     text = re.sub(r'&nbsp;', '', text)
     text = re.sub(r'\s+|\(展开\)', '', text)
     return text
+
+
+def clean_duanwenxue_doc(text):
+    clean_re = r'.*APP下载(.*)海量美文.*'
+    clean_pattern = re.compile(clean_re)
+    return clean_pattern.match(text)

@@ -13,8 +13,11 @@ import threading
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_GUTENBERG_DIR = os.path.join(ROOT, 'data', 'gutenberg')
 INDEX_GUTENBERG_DIR = os.path.join(ROOT, 'index', 'gutenberg')
+DATA_DUANWENXUE_DIR = os.path.join(ROOT, 'data', 'duanwenxue')
+INDEX_DUANWENXUE_DIR = os.path.join(ROOT, 'index', 'duanwenxue')
 GUTENBERG_PARSER_QUEUE = queue.Queue()
-COUNTER = [0, 0]
+DUANWENXUE_PARSER_QUEUE = queue.Queue()
+COUNTER = [[0, 0], [0, 0]]
 
 
 def keep_get(url):
@@ -75,8 +78,8 @@ def gutenberg_doc_crawler(index):
     filename = '%s.book' % os.path.join(DATA_GUTENBERG_DIR, str(index))
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(parser.content)
-        print('BOOK %d SAVED' % index)
-        COUNTER[0] += 1
+        print('BOOK[EN] %d SAVED' % index)
+        COUNTER[0][0] += 1
 
     GUTENBERG_PARSER_QUEUE.put(parser)
     return parser
@@ -109,7 +112,7 @@ def gutenberg_index_build(writer, parser):
             reviews=reviews
         )
     print('%s INDEXED' % parser.title)
-    COUNTER[1] += 1
+    COUNTER[0][1] += 1
 
 
 def douban_review_crawler(title):
@@ -139,29 +142,87 @@ def douban_review_crawler(title):
                 return parser.reviews
 
 
+def duanwenxue_doc_crawler(index):
+    parser = DuanwenxueParser()
+    book_url = 'https://www.duanwenxue.com/article/%d.html' % index
+    response = keep_get(book_url)
+    if response.status_code != 200:
+        return None
+    else:
+        html = response.content.decode('gb2312', 'ignore')
+        parser.feed(html)
+        parser.url = book_url
+        match = clean_duanwenxue_doc(parser.content)
+        if match:
+            parser.content = match.group(1)
+        else:
+            return None
+
+    filename = '%s.book' % os.path.join(DATA_DUANWENXUE_DIR, str(index))
+    with open(filename, 'w', encoding='utf-8') as f:
+        f.write(parser.content)
+        print('BOOK[CN] %d SAVED' % index)
+        COUNTER[1][0] += 1
+    DUANWENXUE_PARSER_QUEUE.put(parser)
+    return parser
+
+
+def duanwenxue_doc_crawler_(start, end):
+    for index in range(start, end):
+        duanwenxue_doc_crawler(index)
+
+
+def duanwenxue_index_build(writer, parser):
+    writer.add_document(
+        title=parser.title,
+        author=parser.author,
+        date=parser.date,
+        content=parser.content,
+        url=parser.url,
+        tag=parser.tag
+    )
+    print('%s INDEXED' % parser.title)
+    COUNTER[1][1] += 1
+
+
 def build(thread_num, doc_num):
     if os.path.exists(DATA_GUTENBERG_DIR):
         shutil.rmtree(DATA_GUTENBERG_DIR)
     if os.path.exists(INDEX_GUTENBERG_DIR):
         shutil.rmtree(INDEX_GUTENBERG_DIR)
+    if os.path.exists(DATA_DUANWENXUE_DIR):
+        shutil.rmtree(DATA_DUANWENXUE_DIR)
+    if os.path.exists(INDEX_DUANWENXUE_DIR):
+        shutil.rmtree(INDEX_DUANWENXUE_DIR)
     if os.path.exists(os.path.join(ROOT, 'bookbase.excpt')):
         os.remove(os.path.join(ROOT, 'bookbase.excpt'))
 
     os.makedirs(DATA_GUTENBERG_DIR)
     os.makedirs(INDEX_GUTENBERG_DIR)
-    schema = GutenbergIndexSchema()
-    create_in(INDEX_GUTENBERG_DIR, schema)
+    os.makedirs(DATA_DUANWENXUE_DIR)
+    os.makedirs(INDEX_DUANWENXUE_DIR)
+    schema_g = GutenbergIndexSchema()
+    schema_d = DuanwenxueIndexSchema()
+    create_in(INDEX_GUTENBERG_DIR, schema_g)
+    create_in(INDEX_DUANWENXUE_DIR, schema_d)
 
-    writer = open_dir(INDEX_GUTENBERG_DIR).writer()
+    writer_g = open_dir(INDEX_GUTENBERG_DIR).writer()
+    writer_d = open_dir(INDEX_DUANWENXUE_DIR).writer()
     for num in range(thread_num):
-        pt = threading.Thread(target=gutenberg_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
-        pt.start()
+        pt_g = threading.Thread(target=gutenberg_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
+        pt_d = threading.Thread(target=duanwenxue_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
+        pt_g.start()
+        pt_d.start()
     time.sleep(5)
     while not GUTENBERG_PARSER_QUEUE.empty():
-        it = threading.Thread(target=gutenberg_index_build, args=(writer, GUTENBERG_PARSER_QUEUE.get(),))
-        it.start()
-        it.join()
-    writer.commit()
+        it_g = threading.Thread(target=gutenberg_index_build, args=(writer_g, GUTENBERG_PARSER_QUEUE.get(),))
+        it_d = threading.Thread(target=duanwenxue_index_build, args=(writer_d, DUANWENXUE_PARSER_QUEUE.get(),))
+        it_g.start()
+        it_d.start()
+        it_g.join()
+        it_d.join()
+    writer_g.commit()
+    writer_d.commit()
     print(COUNTER)
 
 
