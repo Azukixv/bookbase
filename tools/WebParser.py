@@ -101,12 +101,32 @@ class DoubanParserPre(HTMLParser):
         HTMLParser.__init__(self)
         self.title = ''
         self.link = ''
+        self.link_flag = False
+        self.link_flag_count=0
+        self.link_candi=''
 
     def handle_starttag(self, tag, attrs):
+        if tag == 'input' and len(attrs)>=1:
+            if attrs[0]==('placeholder',"搜索你感兴趣的内容和人"):
+                self.title = re.sub('[^a-zA-Z0-9]',' ',str(attrs[5][1]))
+                
         if tag == 'a':
             if str(attrs[0]).find('&pos=0') != -1:
-                start_pos = str(attrs[0]).find('http')
-                self.link = str(attrs[0])[start_pos:]
+                self.link = attrs[0][1]
+                #print(self.link)
+            if str(attrs[0]).find('&pos=') != -1 and self.link_flag_count==0:
+                self.link_flag = True
+                self.link_candi = attrs[0][1]
+
+    def handle_data(self,data):
+        if self.link_flag == True:
+            self.link_flag = False
+            stdata = re.sub('[^a-zA-Z0-9]',' ',str(data))
+            #print('matching '+self.title+ ' in ' + stdata)
+            if stdata.find(self.title) in range(0,5):
+                self.link = self.link_candi
+                self.link_flag_count = 1
+                #print(self.link)
 
 
 class DoubanParser(HTMLParser):
