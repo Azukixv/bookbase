@@ -16,7 +16,6 @@ INDEX_GUTENBERG_DIR = os.path.join(ROOT, 'index', 'gutenberg')
 DATA_DUANWENXUE_DIR = os.path.join(ROOT, 'data', 'duanwenxue')
 INDEX_DUANWENXUE_DIR = os.path.join(ROOT, 'index', 'duanwenxue')
 GUTENBERG_PARSER_QUEUE = queue.Queue()
-DUANWENXUE_PARSER_QUEUE = queue.Queue()
 COUNTER = [[0, 0], [0, 0]]
 
 
@@ -136,9 +135,6 @@ def douban_review_crawler(title):
             else:
                 html = response.content.decode('utf-8')
                 parser.feed(html)
-                # for review in parser.reviews:
-                #     for key, value in review.items():
-                #         print(key, clean_douban_review(value))
                 return parser.reviews
 
 
@@ -163,7 +159,6 @@ def duanwenxue_doc_crawler(index):
         f.write(parser.content)
         print('BOOK[CN] %d SAVED' % index)
         COUNTER[1][0] += 1
-    DUANWENXUE_PARSER_QUEUE.put(parser)
     return parser
 
 
@@ -184,46 +179,6 @@ def duanwenxue_index_build(writer, parser):
     print('%s INDEXED' % parser.title)
     COUNTER[1][1] += 1
 
-
-# def build(thread_num, doc_num):
-#     if os.path.exists(DATA_GUTENBERG_DIR):
-#         shutil.rmtree(DATA_GUTENBERG_DIR)
-#     if os.path.exists(INDEX_GUTENBERG_DIR):
-#         shutil.rmtree(INDEX_GUTENBERG_DIR)
-#     if os.path.exists(DATA_DUANWENXUE_DIR):
-#         shutil.rmtree(DATA_DUANWENXUE_DIR)
-#     if os.path.exists(INDEX_DUANWENXUE_DIR):
-#         shutil.rmtree(INDEX_DUANWENXUE_DIR)
-#     if os.path.exists(os.path.join(ROOT, 'bookbase.excpt')):
-#         os.remove(os.path.join(ROOT, 'bookbase.excpt'))
-#
-#     os.makedirs(DATA_GUTENBERG_DIR)
-#     os.makedirs(INDEX_GUTENBERG_DIR)
-#     os.makedirs(DATA_DUANWENXUE_DIR)
-#     os.makedirs(INDEX_DUANWENXUE_DIR)
-#     schema_g = GutenbergIndexSchema()
-#     schema_d = DuanwenxueIndexSchema()
-#     create_in(INDEX_GUTENBERG_DIR, schema_g)
-#     create_in(INDEX_DUANWENXUE_DIR, schema_d)
-#
-#     writer_g = open_dir(INDEX_GUTENBERG_DIR).writer()
-#     writer_d = open_dir(INDEX_DUANWENXUE_DIR).writer()
-#     for num in range(thread_num):
-#         pt_g = threading.Thread(target=gutenberg_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
-#         pt_d = threading.Thread(target=duanwenxue_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
-#         pt_g.start()
-#         pt_d.start()
-#     time.sleep(5)
-#     while not GUTENBERG_PARSER_QUEUE.empty():
-#         it_g = threading.Thread(target=gutenberg_index_build, args=(writer_g, GUTENBERG_PARSER_QUEUE.get(),))
-#         it_d = threading.Thread(target=duanwenxue_index_build, args=(writer_d, DUANWENXUE_PARSER_QUEUE.get(),))
-#         it_g.start()
-#         it_d.start()
-#         it_g.join()
-#         it_d.join()
-#     writer_g.commit()
-#     writer_d.commit()
-#     print(COUNTER)
 
 def build_gutenberg(thread_num, doc_num):
     if os.path.exists(DATA_GUTENBERG_DIR):
@@ -250,7 +205,7 @@ def build_gutenberg(thread_num, doc_num):
     writer.commit()
 
 
-def build_duanwenxue(thread_num, doc_num):
+def build_duanwenxue(start, end):
     if os.path.exists(DATA_DUANWENXUE_DIR):
         shutil.rmtree(DATA_DUANWENXUE_DIR)
     if os.path.exists(INDEX_DUANWENXUE_DIR):
@@ -262,14 +217,10 @@ def build_duanwenxue(thread_num, doc_num):
     create_in(INDEX_DUANWENXUE_DIR, schema)
 
     writer = open_dir(INDEX_DUANWENXUE_DIR).writer()
-    for num in range(thread_num):
-        pt = threading.Thread(target=duanwenxue_doc_crawler_, args=(doc_num * num + 1, doc_num * (num + 1) + 1,))
-        pt.start()
-    time.sleep(5)
-    while not DUANWENXUE_PARSER_QUEUE.empty():
-        it = threading.Thread(target=duanwenxue_index_build, args=(writer, DUANWENXUE_PARSER_QUEUE.get(),))
-        it.start()
-        it.join()
+    for index in range(start, end):
+        parser = duanwenxue_doc_crawler(index)
+        if parser:
+            duanwenxue_index_build(writer, parser)
     writer.commit()
 
 
@@ -277,5 +228,5 @@ if __name__ == '__main__':
     # build(5, 3)
     # douban_review_crawler('Alice in Wonderland')
     build_gutenberg(50, 450)
-    build_duanwenxue(50, 450)
+    # build_duanwenxue(1, 22500)
     print(COUNTER)
